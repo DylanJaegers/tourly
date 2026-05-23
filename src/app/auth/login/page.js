@@ -14,33 +14,37 @@ export default function LoginPage() {
   const supabase = createClient()
 
   async function handleLogin(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  e.preventDefault()
+  setLoading(true)
+  setError(null)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', data.user.id)
-      .single()
-
-    if (userData?.role === 'agent' || userData?.role === 'fsbo') {
-      router.push('/agent/dashboard')
-    } else {
-      router.push('/feed')
-    }
+  if (error) {
+    setError(error.message)
+    setLoading(false)
+    return
   }
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', data.user.id)
+    .single()
+
+  const role = userData?.role
+
+  if (role === 'agent' || role === 'fsbo') {
+    router.push('/agent/dashboard')
+  } else if (role === 'admin') {
+    router.push('/admin')
+  } else {
+    router.push('/feed')
+  }
+}
 
   async function handleGoogleLogin() {
     await supabase.auth.signInWithOAuth({
@@ -131,7 +135,7 @@ export default function LoginPage() {
         <div className="mt-4 pt-4 border-t border-gray-100 text-center">
           <p className="text-xs text-gray-400 mb-2">Are you an agent?</p>
           <Link
-            href="/agent-signup"
+            href="/auth/agent-signup"
             className="text-xs text-gray-600 border border-gray-200 rounded-lg px-4 py-2 hover:bg-gray-50 transition"
           >
             Agent sign in →

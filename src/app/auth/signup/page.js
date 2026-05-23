@@ -64,7 +64,7 @@ export default function SignupPage() {
             Buyer
           </div>
           <Link
-            href="/agent-signup"
+            href="/auth/agent-signup"
             className="flex-1 py-2 text-center text-sm text-gray-400 hover:bg-gray-50 transition"
           >
             Agent / FSBO

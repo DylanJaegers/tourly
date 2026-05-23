@@ -121,9 +121,10 @@ export default function AgentSignupPage() {
   }
 
   setLoading(false)
+  await new Promise(resolve => setTimeout(resolve, 500))
   router.push('/agent/dashboard')
 }
-  async function skipStep3() {
+async function skipStep3() {
   const { data: { user } } = await supabase.auth.getUser()
   const currentUserId = userId || user?.id
 
@@ -137,9 +138,9 @@ export default function AgentSignupPage() {
     })
   }
 
+  await new Promise(resolve => setTimeout(resolve, 500))
   router.push('/agent/dashboard')
 }
-
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-gray-400 text-gray-900 bg-white placeholder-gray-400"
 
   return (
