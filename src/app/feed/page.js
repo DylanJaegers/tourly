@@ -172,8 +172,17 @@ export default function FeedPage() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex gap-1">
                     {['all', 'for you', 'saved'].map(tab => (
-                      <button key={tab} onClick={() => setActiveTab(tab)} className={'px-3 py-1 rounded-full text-xs capitalize transition ' + (activeTab === tab ? 'bg-white text-gray-900 font-medium' : 'text-white opacity-70')}>{tab}</button>
-                    ))}
+  <button
+    key={tab}
+    onClick={() => {
+      if (tab === 'saved') { router.push('/saved'); return }
+      setActiveTab(tab)
+    }}
+    className={'px-3 py-1 rounded-full text-xs capitalize transition ' + (activeTab === tab ? 'bg-white text-gray-900 font-medium' : 'text-white opacity-70')}
+  >
+    {tab}
+  </button>
+))}
                   </div>
                   <button onClick={() => setShowFilterPanel(true)} className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center backdrop-blur-sm"><span className="text-white text-sm">⚙</span></button>
                 </div>
