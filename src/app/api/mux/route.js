@@ -8,22 +8,22 @@ const mux = new Mux({
 
 export async function POST(request) {
   try {
-    const { videoType } = await request.json()
-
     const upload = await mux.video.uploads.create({
-      cors_origin: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      cors_origin: '*',
       new_asset_settings: {
         playback_policy: ['public'],
         encoding_tier: 'baseline',
       },
     })
 
+    console.log('Mux upload created:', upload.id, upload.url)
+
     return NextResponse.json({
       uploadId: upload.id,
       uploadUrl: upload.url,
     })
   } catch (error) {
-    console.error('Mux upload error:', error)
+    console.error('Mux error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

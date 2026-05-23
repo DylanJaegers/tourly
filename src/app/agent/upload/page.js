@@ -70,32 +70,77 @@ export default function UploadListing() {
   }
 
   async function handleVideoStep(e) {
-    e.preventDefault()
-    if (!shortFormVideo) {
-      setError('Short-form video is required')
+  e.preventDefault()
+  if (!shortFormVideo) {
+    setError('Short-form video is required')
+    return
+  }
+  setLoading(true)
+  setError(null)
+
+  try {
+    const res = await fetch('/api/mux', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoType: 'upload' }),
+    })
+    const { uploadUrl, uploadId, error: muxError } = await res.json()
+
+    if (muxError) {
+      setError('Mux error: ' + muxError)
+      setLoading(false)
       return
     }
-    setLoading(true)
-    setError(null)
 
-    try {
-      const shortId = await uploadVideoToMux(shortFormVideo, setShortFormProgress)
-      setShortFormAssetId(shortId)
-      setShortFormUploaded(true)
+    console.log('Got Mux upload ID:', uploadId)
 
-      if (longFormVideo) {
-        const longId = await uploadVideoToMux(longFormVideo, setLongFormProgress)
-        setLongFormAssetId(longId)
-        setLongFormUploaded(true)
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('PUT', uploadUrl)
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setShortFormProgress(Math.round((e.loaded / e.total) * 100))
       }
+      xhr.onload = () => resolve()
+      xhr.onerror = () => reject(new Error('Upload failed'))
+      xhr.send(shortFormVideo)
+    })
 
-      setLoading(false)
-      setStep(2)
-    } catch (err) {
-      setError(err.message)
-      setLoading(false)
+    console.log('Short form video uploaded, upload ID:', uploadId)
+    setShortFormAssetId(uploadId)
+    setShortFormUploaded(true)
+
+    if (longFormVideo) {
+      const res2 = await fetch('/api/mux', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoType: 'upload' }),
+      })
+      const { uploadUrl: uploadUrl2, uploadId: uploadId2 } = await res2.json()
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('PUT', uploadUrl2)
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setLongFormProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => resolve()
+        xhr.onerror = () => reject(new Error('Upload failed'))
+        xhr.send(longFormVideo)
+      })
+
+      console.log('Long form video uploaded, upload ID:', uploadId2)
+      setLongFormAssetId(uploadId2)
+      setLongFormUploaded(true)
     }
+
+    setLoading(false)
+    setStep(2)
+  } catch (err) {
+    console.error('Video upload error:', err)
+    setError(err.message)
+    setLoading(false)
   }
+}
 
   async function handlePhotoStep(e) {
     e.preventDefault()
@@ -178,20 +223,24 @@ export default function UploadListing() {
       }
 
       if (shortFormAssetId) {
-        await supabase.from('listing_videos').insert({
-          listing_id: listing.id,
-          video_type: 'short_form',
-          mux_asset_id: shortFormAssetId,
-        })
-      }
+  const { error: videoError } = await supabase.from('listing_videos').insert({
+    listing_id: listing.id,
+    video_type: 'short_form',
+    mux_asset_id: shortFormAssetId,
+  })
+  console.log('Short form video insert result:', videoError || 'success')
+  if (videoError) console.error('Video insert error:', videoError)
+}
 
-      if (longFormAssetId) {
-        await supabase.from('listing_videos').insert({
-          listing_id: listing.id,
-          video_type: 'long_form',
-          mux_asset_id: longFormAssetId,
-        })
-      }
+if (longFormAssetId) {
+  const { error: videoError2 } = await supabase.from('listing_videos').insert({
+    listing_id: listing.id,
+    video_type: 'long_form',
+    mux_asset_id: longFormAssetId,
+  })
+  console.log('Long form video insert result:', videoError2 || 'success')
+  if (videoError2) console.error('Long form video insert error:', videoError2)
+}
 
       setListingId(listing.id)
       setLoading(false)
