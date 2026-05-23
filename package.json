@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-"dev": "TURBOPACK=0 next dev",    "lint": "eslint"
+    "dev": "TURBOPACK=0 next dev",
+    "lint": "eslint"
   },
   "dependencies": {
+    "@mux/mux-node": "^14.1.0",
+    "@mux/mux-player-react": "^3.13.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "next": "16.2.6",
