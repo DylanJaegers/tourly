@@ -88,36 +88,57 @@ export default function AgentSignupPage() {
   }
 
   async function handleStep3(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  e.preventDefault()
+  setLoading(true)
+  setError(null)
 
-    const { error: agentError } = await supabase
-      .from('agents')
-      .upsert({
-        id: userId,
-        phone,
-        bio,
-        years_experience: yearsExperience ? parseInt(yearsExperience) : null,
-        show_years_experience: showExperience,
-        phone_contact_allowed: phoneContactAllowed,
-        is_fsbo: accountType === 'fsbo',
-        is_verified: false,
-      })
+  const { data: { user } } = await supabase.auth.getUser()
+  const currentUserId = userId || user?.id
 
-    if (agentError) {
-      setError(agentError.message)
-      setLoading(false)
-      return
-    }
-
+  if (!currentUserId) {
+    setError('Session expired. Please sign up again.')
     setLoading(false)
-    router.push('/agent/dashboard')
+    return
   }
 
-  async function skipStep3() {
-    router.push('/agent/dashboard')
+  const { error: agentError } = await supabase
+    .from('agents')
+    .upsert({
+      id: currentUserId,
+      phone,
+      bio,
+      years_experience: yearsExperience ? parseInt(yearsExperience) : null,
+      show_years_experience: showExperience,
+      phone_contact_allowed: phoneContactAllowed,
+      is_fsbo: accountType === 'fsbo',
+      is_verified: false,
+    })
+
+  if (agentError) {
+    setError(agentError.message)
+    setLoading(false)
+    return
   }
+
+  setLoading(false)
+  router.push('/agent/dashboard')
+}
+  async function skipStep3() {
+  const { data: { user } } = await supabase.auth.getUser()
+  const currentUserId = userId || user?.id
+
+  if (currentUserId) {
+    await supabase.from('agents').upsert({
+      id: currentUserId,
+      is_fsbo: accountType === 'fsbo',
+      is_verified: false,
+      phone_contact_allowed: false,
+      show_years_experience: true,
+    })
+  }
+
+  router.push('/agent/dashboard')
+}
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-gray-400 text-gray-900 bg-white placeholder-gray-400"
 
