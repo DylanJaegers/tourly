@@ -96,3 +96,5 @@ RESEND_API_KEY=
 
 ## What to read before writing any Next.js code
 Read `node_modules/next/dist/docs/` for the current API. The App Router, server components, and data fetching patterns may differ from training data. Always use the file-based routing conventions of the App Router.
+git add . && git commit -m "Fix AGENTS.md" && git push
+
