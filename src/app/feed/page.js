@@ -140,8 +140,7 @@ export default function FeedPage() {
                         ) : currentListing.agent_profiles?.full_name?.charAt(0) || 'A'}
                       </div>
                       <div>
-                        <p className="text-white text-xs font-medium">{currentListing.agent_profiles?.full_name}</p>
-                        <p className="text-white text-xs opacity-60">{currentListing.agent_profiles?.is_fsbo ? 'For Sale By Owner' : currentListing.agent_profiles?.brokerage}</p>
+<Link href={'/agent/profile/' + currentListing.agent_id} className="text-white text-xs font-medium hover:underline">{currentListing.agent_profiles ? currentListing.agent_profiles.full_name : 'Agent'}</Link>                        <p className="text-white text-xs opacity-60">{currentListing.agent_profiles?.is_fsbo ? 'For Sale By Owner' : currentListing.agent_profiles?.brokerage}</p>
                       </div>
                       <button className="ml-2 text-xs text-white border border-white border-opacity-40 px-2.5 py-1 rounded-full">Follow</button>
                     </div>

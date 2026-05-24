@@ -224,8 +224,7 @@ export default function ListingDetail() {
             {agentAvatar ? <img src={agentAvatar} alt="" className="w-full h-full object-cover" /> : agentName.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900">{agentName}</p>
-            <p className="text-xs text-gray-400">{agentIsFsbo ? 'For Sale By Owner' : agentBrokerage}</p>
+<Link href={'/agent/profile/' + listing.agent_id} className="text-sm font-medium text-gray-900 hover:underline">{agentName}</Link>            <p className="text-xs text-gray-400">{agentIsFsbo ? 'For Sale By Owner' : agentBrokerage}</p>
           </div>
           <button onClick={toggleFollow} className={followed ? 'text-xs px-3 py-1.5 rounded-full border bg-gray-900 text-white border-gray-900' : 'text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50'}>
             {followed ? 'Following' : 'Follow'}
