@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { geocodeAddress } from '@/lib/maps'
 
 export default function UploadListing() {
   const [step, setStep] = useState(1)
@@ -186,6 +187,9 @@ export default function UploadListing() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
+      const coords = await geocodeAddress(address, city, state, zip)
+      console.log("Geocoding result:", coords)
+
       const { data: listing, error: listingError } = await supabase
         .from('listings')
         .insert({
@@ -194,6 +198,8 @@ export default function UploadListing() {
           city,
           state,
           zip,
+          lat: coords ? coords.lat : null,
+          lng: coords ? coords.lng : null,
           price: parseInt(price),
           listing_type: listingType,
           property_type: propertyType,
