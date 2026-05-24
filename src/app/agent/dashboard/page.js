@@ -67,9 +67,12 @@ export default function AgentDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/agent/upload" className="bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-700 transition">
-            + New listing
-          </Link>
+          <Link href="/agent/leads" className="text-xs text-gray-500 border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-50 transition">
+  Leads {stats.leads > 0 ? '(' + stats.leads + ')' : ''}
+</Link>
+<Link href="/agent/upload" className="bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-gray-700 transition">
+  + New listing
+</Link>
           <button onClick={handleSignOut} className="text-xs text-gray-400 hover:text-gray-600 transition">
             Sign out
           </button>
