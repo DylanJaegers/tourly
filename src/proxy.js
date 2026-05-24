@@ -37,6 +37,7 @@ export async function proxy(request) {
     '/agent/dashboard',
     '/agent/upload',
     '/agent/leads',
+    '/admin',
   ]
 
   const isProtectedRoute = protectedRoutes.some(route =>
