@@ -5,21 +5,34 @@ import { createClient } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
-export default function SidebarNav({ onSearchClick, onFilterClick, activeTab }) {
+export default function SidebarNav({ onSearchClick, onFilterClick }) {
   const [user, setUser] = useState(null)
+  const [isAgent, setIsAgent] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(function(res) {
-      setUser(res.data ? res.data.user : null)
+    supabase.auth.getUser().then(async function(res) {
+      const currentUser = res.data ? res.data.user : null
+      setUser(currentUser)
+      if (currentUser) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single()
+        if (userData && (userData.role === 'agent' || userData.role === 'fsbo')) {
+          setIsAgent(true)
+        }
+      }
     })
   }, [])
 
   const isForYou = pathname === '/feed'
   const isMap = pathname === '/map'
   const isSaved = pathname === '/saved'
+  const isDashboard = pathname === '/agent/dashboard' || pathname.startsWith('/agent/')
 
   return (
     <div className="hidden md:flex flex-col w-52 bg-zinc-950 border-r border-zinc-800 flex-shrink-0 h-screen">
@@ -36,26 +49,31 @@ export default function SidebarNav({ onSearchClick, onFilterClick, activeTab }) 
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           Search
         </button>
+
         <button onClick={() => router.push('/feed')}
           className={'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition w-full text-left ' + (isForYou ? 'bg-white text-black font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
           For You
         </button>
+
         <button onClick={() => router.push('/map')}
           className={'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition w-full text-left ' + (isMap ? 'bg-white text-black font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
           Map view
         </button>
+
         <button onClick={() => router.push('/saved')}
           className={'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition w-full text-left ' + (isSaved ? 'bg-white text-black font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           Saved
         </button>
+
         <button onClick={() => router.push(user ? '/profile' : '/auth/login')}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition w-full text-left">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Profile
         </button>
+
         {onFilterClick && (
           <>
             <div className="my-2 border-t border-zinc-800"></div>
@@ -63,6 +81,17 @@ export default function SidebarNav({ onSearchClick, onFilterClick, activeTab }) 
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition w-full text-left">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
               Filters
+            </button>
+          </>
+        )}
+
+        {isAgent && (
+          <>
+            <div className="my-2 border-t border-zinc-800"></div>
+            <button onClick={() => router.push('/agent/dashboard')}
+              className={'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition w-full text-left ' + (isDashboard ? 'bg-white text-black font-semibold' : 'text-zinc-300 hover:bg-zinc-800 hover:text-white')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              My Listing Dashboard
             </button>
           </>
         )}
