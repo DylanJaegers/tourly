@@ -14,15 +14,33 @@ export default function FeedPage() {
   const [savedIds, setSavedIds] = useState(new Set())
   const [activeTab, setActiveTab] = useState('all')
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [direction, setDirection] = useState('up')
+  const [animating, setAnimating] = useState(false)
+  const [exitingIndex, setExitingIndex] = useState(null)
   const [showSearchPanel, setShowSearchPanel] = useState(false)
   const [searchLocation, setSearchLocation] = useState('')
   const [filters, setFilters] = useState({ listingType: 'all', priceMin: '', priceMax: '', bedrooms: 'any', propertyType: 'all' })
   const touchStartY = useRef(0)
   const touchStartX = useRef(0)
+  const videoContainerRef = useRef(null)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => { loadFeed(); checkUser() }, [activeTab])
+
+  useEffect(() => {
+    const el = videoContainerRef.current
+    if (!el) return
+    function onWheel(e) {
+      e.preventDefault()
+      if (wheelTimeout.current) return
+      wheelTimeout.current = setTimeout(function() { wheelTimeout.current = null }, 600)
+      if (e.deltaY > 30) goNext()
+      else if (e.deltaY < -30) goPrev()
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return function() { el.removeEventListener('wheel', onWheel) }
+  }, [currentIndex, listings.length, animating])
 
   async function checkUser() {
     const { data: authData } = await supabase.auth.getUser()
@@ -64,8 +82,30 @@ export default function FeedPage() {
     }
   }
 
-  function goNext() { if (currentIndex < listings.length - 1) setCurrentIndex(function(p) { return p + 1 }) }
-  function goPrev() { if (currentIndex > 0) setCurrentIndex(function(p) { return p - 1 }) }
+  function goNext() {
+    if (currentIndex < listings.length - 1 && !animating) {
+      setDirection('up')
+      setExitingIndex(currentIndex)
+      setAnimating(true)
+      setCurrentIndex(function(p) { return p + 1 })
+      setTimeout(function() {
+        setAnimating(false)
+        setExitingIndex(null)
+      }, 380)
+    }
+  }
+  function goPrev() {
+    if (currentIndex > 0 && !animating) {
+      setDirection('down')
+      setExitingIndex(currentIndex)
+      setAnimating(true)
+      setCurrentIndex(function(p) { return p - 1 })
+      setTimeout(function() {
+        setAnimating(false)
+        setExitingIndex(null)
+      }, 380)
+    }
+  }
   function handleTouchStart(e) { touchStartY.current = e.touches[0].clientY; touchStartX.current = e.touches[0].clientX }
   function handleTouchEnd(e) {
     const dy = touchStartY.current - e.changedTouches[0].clientY
@@ -73,6 +113,8 @@ export default function FeedPage() {
     if (Math.abs(dx) > Math.abs(dy)) { if (dx > 50 && listings[currentIndex]) router.push('/listing/' + listings[currentIndex].id) }
     else { if (dy > 50) goNext(); else if (dy < -50) goPrev() }
   }
+  const wheelTimeout = useRef(null)
+
   function handleKeyDown(e) {
     if (e.key === 'ArrowUp') goPrev()
     if (e.key === 'ArrowDown') goNext()
@@ -111,9 +153,12 @@ export default function FeedPage() {
 
       <SidebarNav onSearchClick={() => setShowSearchPanel(true)} onFilterClick={() => setShowFilterPanel(true)} />
 
-      <div className="relative flex-shrink-0 h-screen bg-black"
-        style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '400px', minWidth: '260px' }}
-        onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div
+        ref={videoContainerRef}
+        className="relative flex-shrink-0 h-screen bg-black flex items-center justify-center overflow-hidden"
+        style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '420px', minWidth: '280px' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}>
 
         {listings.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-4 px-8 text-center">
@@ -122,17 +167,32 @@ export default function FeedPage() {
           </div>
         ) : currentListing ? (
           <div className="absolute inset-0">
-            {getVid(currentListing) && getVid(currentListing).mux_playback_id ? (
-              <video key={currentListing.id} className="w-full h-full object-cover" autoPlay muted loop playsInline
-                src={'https://stream.mux.com/' + getVid(currentListing).mux_playback_id + '.m3u8'} />
-            ) : getCover(currentListing) ? (
-              <img src={getCover(currentListing)} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-zinc-900 flex items-center justify-center"><span className="text-6xl">🏠</span></div>
+
+            {animating && exitingIndex !== null && listings[exitingIndex] && (
+              <div key={"exit-" + exitingIndex} className={"absolute inset-0 z-10 " + (direction === "up" ? "slide-out-top" : "slide-out-bottom")}>
+                {getVid(listings[exitingIndex]) ? (
+                  <video className="w-full h-full object-cover" autoPlay muted loop playsInline
+                    src={"https://stream.mux.com/" + getVid(listings[exitingIndex]).mux_playback_id + ".m3u8"} />
+                ) : getCover(listings[exitingIndex]) ? (
+                  <img src={getCover(listings[exitingIndex])} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-zinc-900 flex items-center justify-center"><span className="text-6xl">🏠</span></div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+              </div>
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
-
+            <div className={"absolute inset-0 " + (animating ? (direction === "up" ? "slide-in-bottom" : "slide-in-top") : "")}>
+              {getVid(currentListing) ? (
+                <video key={currentListing.id} className="w-full h-full object-cover" autoPlay muted loop playsInline
+                  src={"https://stream.mux.com/" + getVid(currentListing).mux_playback_id + ".m3u8"} />
+              ) : getCover(currentListing) ? (
+                <img src={getCover(currentListing)} alt={currentListing.address} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-zinc-900 flex items-center justify-center"><span className="text-6xl">🏠</span></div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+            </div>
             <div className="absolute top-0 left-0 right-0 px-3 pt-10 pb-2 flex items-center justify-between">
               <div className="flex gap-1 bg-black/30 backdrop-blur-sm rounded-full p-1">
                 {['All', 'For You', 'Saved'].map(function(tab) {

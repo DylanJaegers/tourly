@@ -24,3 +24,28 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideOutToTop {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+@keyframes slideOutToBottom {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
+}
+
+.slide-in-bottom { animation: slideInFromBottom 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-in-top { animation: slideInFromTop 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-out-top { animation: slideOutToTop 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-out-bottom { animation: slideOutToBottom 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
