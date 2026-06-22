@@ -1,0 +1,16 @@
+const fs = require('fs');
+const filePath = 'src/app/listing/[id]/page.js';
+let content = fs.readFileSync(filePath, 'utf8');
+
+const oldBlock = '      <div className="px-4 py-4 border-t border-gray-50" id="map">\n        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Location</p>\n        {user ? (\n          <div className="bg-gray-100 rounded-xl h-40 flex items-center justify-center">\n            <p className="text-sm text-gray-400">📍 {listing.address}, {listing.city} {listing.state}</p>\n          </div>\n        ) : (\n          <div className="bg-gray-50 rounded-xl h-40 flex flex-col items-center justify-center gap-2">\n            <p className="text-sm text-gray-400">Sign in to see the full address</p>\n            <Link href="/auth/login" className="text-xs text-gray-900 font-medium border border-gray-200 rounded-lg px-3 py-1.5">Sign in</Link>\n          </div>\n        )}\n      </div>';
+
+const newBlock = '      <div className="px-4 py-4 border-t border-gray-50" id="map">\n        <div className="flex items-center justify-between mb-3">\n          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location</p>\n          <Link href={listing.lat && listing.lng ? (\"/map?listing=\" + listing.id) : \"/map\"} className="text-xs text-gray-900 font-medium hover:underline">\n            Open full map →\n          </Link>\n        </div>\n        {user ? (\n          listing.lat && listing.lng ? (\n            <Link href={\"/map?listing=\" + listing.id} className="block relative rounded-xl overflow-hidden h-48 group">\n              <img\n                src={\"https://maps.googleapis.com/maps/api/staticmap?center=\" + listing.lat + \",\" + listing.lng + \"&zoom=14&size=600x300&scale=2&maptype=roadmap&markers=color:0x1a1a1a%7C\" + listing.lat + \",\" + listing.lng + \"&key=\" + (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || \"\")}\n                alt="Map location"\n                className="w-full h-full object-cover"\n              />\n              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition flex items-center justify-center">\n                <span className="bg-white text-gray-900 text-xs font-medium px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition shadow-md">View on map</span>\n              </div>\n            </Link>\n          ) : (\n            <div className="bg-gray-100 rounded-xl h-40 flex items-center justify-center">\n              <p className="text-sm text-gray-400">📍 {listing.address}, {listing.city} {listing.state}</p>\n            </div>\n          )\n        ) : (\n          <div className="bg-gray-50 rounded-xl h-40 flex flex-col items-center justify-center gap-2">\n            <p className="text-sm text-gray-400">Sign in to see the full address</p>\n            <Link href="/auth/login" className="text-xs text-gray-900 font-medium border border-gray-200 rounded-lg px-3 py-1.5">Sign in</Link>\n          </div>\n        )}\n      </div>';
+
+if (content.indexOf(oldBlock) === -1) {
+  console.log('OLD BLOCK NOT FOUND - aborting, no changes made');
+  process.exit(1);
+}
+
+content = content.replace(oldBlock, newBlock);
+fs.writeFileSync(filePath, content);
+console.log('Done - map section replaced');

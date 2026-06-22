@@ -233,11 +233,32 @@ export default function ListingDetail() {
       </div>
 
       <div className="px-4 py-4 border-t border-gray-50" id="map">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Location</p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Location</p>
+          <Link href={listing.lat && listing.lng ? ("/map?listing=" + listing.id) : "/map"} className="text-xs text-gray-900 font-medium hover:underline">
+            Open full map →
+          </Link>
+        </div>
         {user ? (
-          <div className="bg-gray-100 rounded-xl h-40 flex items-center justify-center">
-            <p className="text-sm text-gray-400">📍 {listing.address}, {listing.city} {listing.state}</p>
-          </div>
+          listing.lat && listing.lng ? (
+            <Link href={"/map?listing=" + listing.id} className="block relative rounded-xl overflow-hidden h-48 group">
+              <div className="w-full h-full relative">
+                <iframe
+                  src={"https://www.google.com/maps/embed/v1/place?key=" + (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "") + "&q=" + listing.lat + "," + listing.lng + "&zoom=14"}
+                  className="absolute inset-0 w-full h-full border-0 pointer-events-none rounded-xl"
+                  loading="lazy"
+                  allowFullScreen
+                />
+                <div className="absolute inset-0 bg-transparent group-hover:bg-black group-hover:bg-opacity-10 transition flex items-center justify-center">
+                  <span className="bg-white text-gray-900 text-xs font-medium px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition shadow-md">View on map</span>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="bg-gray-100 rounded-xl h-40 flex items-center justify-center">
+              <p className="text-sm text-gray-400">📍 {listing.address}, {listing.city} {listing.state}</p>
+            </div>
+          )
         ) : (
           <div className="bg-gray-50 rounded-xl h-40 flex flex-col items-center justify-center gap-2">
             <p className="text-sm text-gray-400">Sign in to see the full address</p>
